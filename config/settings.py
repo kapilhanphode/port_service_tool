@@ -41,6 +41,9 @@ INSTALLED_APPS = [
     'apps.accounts',
     'apps.companies',
     'apps.vessels',
+    'apps.services',
+    'apps.rfq',
+    'apps.quotations',
 ]
 
 MIDDLEWARE = [

@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from apps.core.admin_site import port_admin
 
 @api_view(['GET'])
 def health_check(request):
@@ -26,7 +27,7 @@ def health_check(request):
 
 urlpatterns = [
     path('health/', health_check),
-    path('admin/', admin.site.urls),
+    path('admin/', port_admin.urls),
     path('api/v1/', include('api.v1.urls')),
 
 ]
