@@ -44,6 +44,10 @@ INSTALLED_APPS = [
     'apps.services',
     'apps.rfq',
     'apps.quotations',
+    'apps.purchase_orders',
+    'apps.messaging',
+    'apps.disputes',
+    'apps.commissions',
 ]
 
 MIDDLEWARE = [
