@@ -7,4 +7,4 @@ from apps.core.admin_site import port_admin
 class RFQAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'company', 'service', 'status')
     search_fields = ['title', 'company']
-    list_filter = ('status', 'service')
+    list_filter = ('status', 'service', 'is_deleted')

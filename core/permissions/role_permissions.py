@@ -11,3 +11,7 @@ class IsSupplier(BasePermission):
 class IsAdmin(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_staff
+
+class IsClientOrAdmin(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.user_type == "client" or request.user.is_staff

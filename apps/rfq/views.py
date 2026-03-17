@@ -1,18 +1,23 @@
 from django.shortcuts import get_object_or_404
 from core.utils.responses import success_response, error_response
-from core.permissions.role_permissions import IsClient
+from core.permissions.role_permissions import IsClient, IsClientOrAdmin
 from core.pagination.pagination import StandardResultsPagination
+from core.throttles import LoginUserThrottle
+from core.tasks import send_rfq_notification
 from .models import RFQ
 from .serializers import RFQSerializer
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from django_filters.rest_framework import DjangoFilterBackend
+
+from .. import rfq
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated, IsClient])
+@permission_classes([IsAuthenticated, IsClientOrAdmin])
+@throttle_classes([LoginUserThrottle])
 def rfqs_view(request):
-    rfqs = RFQ.objects.all()
+    rfqs = RFQ.objects.filter(is_deleted=False)
 
     # Filter by status if provided
     status_param = request.GET.get('status')
@@ -33,9 +38,9 @@ def rfqs_view(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated, IsClient])
+@permission_classes([IsAuthenticated, IsClientOrAdmin])
 def rfq_detail_view(request, pk):
-    rfq = get_object_or_404(RFQ, pk=pk)
+    rfq = get_object_or_404(RFQ, pk=pk, is_deleted=False)
     serializer = RFQSerializer(rfq)
     return success_response(
         data=serializer.data,
@@ -44,11 +49,12 @@ def rfq_detail_view(request, pk):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated, IsClient])
+@permission_classes([IsAuthenticated, IsClientOrAdmin])
 def create_rfq(request):
     serializer = RFQSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save(created_by=request.user)
+        rfq = serializer.save(created_by=request.user)
+        send_rfq_notification.delay(rfq.id)
         return success_response(
             data=serializer.data,
             message="RFQ created successfully"
@@ -61,9 +67,9 @@ def create_rfq(request):
 
 
 @api_view(['PATCH'])
-@permission_classes([IsAuthenticated, IsClient])
+@permission_classes([IsAuthenticated, IsClientOrAdmin])
 def update_rfq(request, pk):
-    rfq = get_object_or_404(RFQ, pk=pk)
+    rfq = get_object_or_404(RFQ, pk=pk, is_deleted=False)
     serializer = RFQSerializer(instance=rfq, data=request.data, partial=True)
     if serializer.is_valid():
         print('serializer.error.....................', serializer.errors)
@@ -77,3 +83,11 @@ def update_rfq(request, pk):
         message="Validation failed",
         error=serializer.errors
     )
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated, IsClientOrAdmin])
+def delete_rfq(request, pk):
+    rfq = get_object_or_404(RFQ, pk=pk, is_deleted=False)
+    rfq.is_deleted = True
+    rfq.save()
+    return success_response(message="RFQ deleted successfully")

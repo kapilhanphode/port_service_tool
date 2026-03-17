@@ -3,9 +3,10 @@ from apps.companies.models import Company
 from apps.services.models import Service
 from apps.vessels.models import Vessel
 from apps.accounts.models import User
+from core.models import BaseModel
 
 
-class RFQ(models.Model):
+class RFQ(BaseModel):
     STATUS_CHOICES = (
     ('open', 'Open'),
     ('evaluating', 'Evaluating'),
@@ -21,8 +22,8 @@ class RFQ(models.Model):
     deadline = models.DateField()
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='open')
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    # created_at = models.DateTimeField(auto_now_add=True)
+    # updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name_plural = 'RFQs'
